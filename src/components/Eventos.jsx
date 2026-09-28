@@ -9,14 +9,7 @@ function Eventos({
   terminarEdicion,
   eventoGuardado
 }) {
-  const [eventos, setEventos] = useState(() => {
-    const eventosGuardados =
-      localStorage.getItem("eventos")
-
-    return eventosGuardados
-      ? JSON.parse(eventosGuardados)
-      : []
-  })
+  const [eventos, setEventos] = useState([])
 
   // =========================
   // INFORMACIÓN GENERAL
@@ -143,6 +136,77 @@ function Eventos({
     useState(false)
 
   // =========================
+  // CARGAR EVENTOS DESDE SUPABASE
+  // =========================
+
+  useEffect(() => {
+    async function cargarEventos() {
+      const { data, error } = await supabase
+        .from("eventos")
+        .select("*")
+        .order("fecha_inicio", {
+          ascending: true
+        })
+
+      if (error) {
+        console.error(
+          "ERROR AL CARGAR EVENTOS:",
+          error
+        )
+
+        setError(
+          "No se pudieron cargar los eventos."
+        )
+
+        return
+      }
+
+      const eventosConvertidos =
+        data.map((evento) => ({
+          id: evento.id,
+
+          nombre: evento.nombre,
+
+          fechaInicio:
+            evento.fecha_inicio,
+
+          fechaFin:
+            evento.fecha_fin,
+
+          fechaArmado:
+            evento.fecha_armado,
+
+          horaArmado:
+            evento.hora_armado,
+
+          fechaDesarme:
+            evento.fecha_desarme,
+
+          horaDesarme:
+            evento.hora_desarme,
+
+          lugar: evento.lugar,
+
+          contacto: evento.contacto,
+
+          estado: evento.estado,
+
+          ...evento.datos
+        }))
+
+      setEventos(eventosConvertidos)
+
+      // Copia local temporal
+      localStorage.setItem(
+        "eventos",
+        JSON.stringify(eventosConvertidos)
+      )
+    }
+
+    cargarEventos()
+  }, [])
+
+  // =========================
   // LIMPIAR FORMULARIO
   // =========================
 
@@ -238,57 +302,118 @@ function Eventos({
     }
 
     // =========================
+    // DATOS TÉCNICOS
+    // =========================
+
+    const datosEvento = {
+      tipo,
+      consideraciones,
+
+      // Pantalla
+      tipoPantalla,
+      pitch,
+      medidasPantalla,
+      resolucion,
+      procesador,
+      cantidadPantalla,
+      observacionesPantalla,
+      consideracionesPantalla,
+
+      // Audio
+      sistemaAudio,
+      consolaAudio,
+      microfonosAudio,
+      monitoresAudio,
+      otrosAudio,
+      consideracionesAudio,
+
+      // Luces
+      consolaLuces,
+      fixturesLuces,
+      cantidadLuces,
+      estructuraLuces,
+      otrosLuces,
+      consideracionesLuces
+    }
+
+    // =========================
     // EDITAR EVENTO
     // =========================
 
     if (eventoEditando) {
+      const { data, error } = await supabase
+        .from("eventos")
+        .update({
+          nombre,
+
+          lugar,
+
+          fecha_inicio: fechaInicio,
+          fecha_fin: fechaFin,
+
+          fecha_armado: fechaArmado,
+          hora_armado: horaArmado,
+
+          fecha_desarme: fechaDesarme,
+          hora_desarme: horaDesarme,
+
+          contacto,
+
+          datos: datosEvento
+        })
+        .eq("id", eventoEditando)
+        .select()
+        .single()
+
+      if (error) {
+        console.error(
+          "ERROR AL EDITAR EVENTO EN SUPABASE:",
+          error
+        )
+
+        setError(
+          "No se pudieron guardar los cambios."
+        )
+
+        return
+      }
+
+      const eventoActualizado = {
+        id: data.id,
+
+        nombre: data.nombre,
+
+        fechaInicio:
+          data.fecha_inicio,
+
+        fechaFin:
+          data.fecha_fin,
+
+        fechaArmado:
+          data.fecha_armado,
+
+        horaArmado:
+          data.hora_armado,
+
+        fechaDesarme:
+          data.fecha_desarme,
+
+        horaDesarme:
+          data.hora_desarme,
+
+        lugar: data.lugar,
+
+        contacto: data.contacto,
+
+        estado: data.estado,
+
+        ...data.datos
+      }
+
       const eventosActualizados =
         eventos.map((evento) =>
           evento.id === eventoEditando
-            ? {
-                ...evento,
-
-                nombre,
-                fechaInicio,
-                fechaFin,
-
-                fechaArmado,
-                horaArmado,
-
-                fechaDesarme,
-                horaDesarme,
-
-                lugar,
-                tipo,
-                contacto,
-                consideraciones,
-
-                // Pantalla
-                tipoPantalla,
-                pitch,
-                medidasPantalla,
-                resolucion,
-                procesador,
-                cantidadPantalla,
-                observacionesPantalla,
-                consideracionesPantalla,
-
-                // Audio
-                sistemaAudio,
-                consolaAudio,
-                microfonosAudio,
-                monitoresAudio,
-                otrosAudio,
-                consideracionesAudio,
-
-                // Luces
-                consolaLuces,
-                fixturesLuces,
-                cantidadLuces,
-                estructuraLuces,
-                otrosLuces,
-                consideracionesLuces
-              }
+            ? eventoActualizado
             : evento
         )
 
@@ -298,12 +423,6 @@ function Eventos({
         "eventos",
         JSON.stringify(eventosActualizados)
       )
-
-      const eventoActualizado =
-        eventosActualizados.find(
-          (evento) =>
-            evento.id === eventoEditando
-        )
 
       limpiarFormulario()
 
@@ -338,36 +457,7 @@ function Eventos({
 
         estado: "Confirmado",
 
-        datos: {
-          tipo,
-          consideraciones,
-
-          // Pantalla
-          tipoPantalla,
-          pitch,
-          medidasPantalla,
-          resolucion,
-          procesador,
-          cantidadPantalla,
-          observacionesPantalla,
-          consideracionesPantalla,
-
-          // Audio
-          sistemaAudio,
-          consolaAudio,
-          microfonosAudio,
-          monitoresAudio,
-          otrosAudio,
-          consideracionesAudio,
-
-          // Luces
-          consolaLuces,
-          fixturesLuces,
-          cantidadLuces,
-          estructuraLuces,
-          otrosLuces,
-          consideracionesLuces
-        }
+        datos: datosEvento
       })
       .select()
       .single()
@@ -385,36 +475,37 @@ function Eventos({
       return
     }
 
-    // =========================
-    // CONVERTIR DATOS DE SUPABASE
-    // AL FORMATO DE NUESTRA APP
-    // =========================
-
     const nuevoEvento = {
       id: data.id,
 
       nombre: data.nombre,
 
-      fechaInicio: data.fecha_inicio,
-      fechaFin: data.fecha_fin,
+      fechaInicio:
+        data.fecha_inicio,
 
-      fechaArmado: data.fecha_armado,
-      horaArmado: data.hora_armado,
+      fechaFin:
+        data.fecha_fin,
 
-      fechaDesarme: data.fecha_desarme,
-      horaDesarme: data.hora_desarme,
+      fechaArmado:
+        data.fecha_armado,
+
+      horaArmado:
+        data.hora_armado,
+
+      fechaDesarme:
+        data.fecha_desarme,
+
+      horaDesarme:
+        data.hora_desarme,
 
       lugar: data.lugar,
+
       contacto: data.contacto,
 
       estado: data.estado,
 
       ...data.datos
     }
-
-    // =========================
-    // ACTUALIZAR APP
-    // =========================
 
     const eventosActualizados = [
       ...eventos,
@@ -423,8 +514,6 @@ function Eventos({
 
     setEventos(eventosActualizados)
 
-    // Mantenemos localStorage
-    // temporalmente mientras migramos
     localStorage.setItem(
       "eventos",
       JSON.stringify(eventosActualizados)
@@ -561,9 +650,6 @@ function Eventos({
     setConsideracionesLuces(
       evento.consideracionesLuces || ""
     )
-
-    // Abrimos automáticamente
-    // los apartados que tengan información
 
     setPantallaAbierta(
       Boolean(
