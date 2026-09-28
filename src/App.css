@@ -7184,3 +7184,58 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   }
 
 }
+/* =====================================================
+   EVENTOS — FORMULARIO INFO GENERAL EN MÓVIL
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+  .eventos-formulario,
+  .evento-formulario {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .eventos-formulario > *,
+  .evento-formulario > * {
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .eventos-formulario input,
+  .eventos-formulario select,
+  .eventos-formulario textarea,
+  .evento-formulario input,
+  .evento-formulario select,
+  .evento-formulario textarea {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .eventos-formulario .form-row,
+  .evento-formulario .form-row,
+  .eventos-formulario .form-grid,
+  .evento-formulario .form-grid {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .eventos-formulario .form-row,
+  .evento-formulario .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .eventos-formulario label,
+  .evento-formulario label {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+}
