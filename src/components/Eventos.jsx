@@ -711,12 +711,30 @@ function Eventos({
   // ELIMINAR EVENTO
   // =========================
 
-  function eliminarEvento(id) {
+  async function eliminarEvento(id) {
     const confirmar = window.confirm(
       "¿Seguro que querés eliminar este evento?"
     )
 
     if (!confirmar) {
+      return
+    }
+
+    const { error } = await supabase
+      .from("eventos")
+      .delete()
+      .eq("id", id)
+
+    if (error) {
+      console.error(
+        "ERROR AL ELIMINAR EVENTO EN SUPABASE:",
+        error
+      )
+
+      setError(
+        "No se pudo eliminar el evento."
+      )
+
       return
     }
 
