@@ -1,0 +1,15 @@
+{
+  "name": "BINIVISION — Bini App",
+  "short_name": "Bini App",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111111",
+  "theme_color": "#111111",
+  "icons": [
+    {
+      "src": "/logobini.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
