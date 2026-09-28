@@ -6943,7 +6943,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
   color: #111111;
   font-size: 12px;
   font-weight: 900;
-  line-height: 1;
+  line-height: 1.2;
 
   padding: 0;
 
@@ -6962,7 +6962,7 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 
   transform: rotate(45deg);
 
-  margin-top: -1px;
+  margin-top: -2px;
 }
 
 /* AL PASAR EL MOUSE */
@@ -7004,4 +7004,31 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
 .detalle-material-info > span {
   color: #888888;
   font-size: 13px;
+}
+/* =====================================================
+   RESPONSIVE — CELULAR
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+  /* Ocultar sidebar izquierda */
+  .sidebar {
+    display: none;
+  }
+
+  /* Ocultar sidebar derecha */
+  .sidebar-usuario {
+    display: none;
+  }
+
+  /* El contenido ocupa todo el ancho */
+  .app-contenido {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    padding: 24px 16px 40px;
+    box-sizing: border-box;
+  }
+
 }
