@@ -7238,4 +7238,88 @@ input[type="date"]::-webkit-calendar-picker-indicator:hover {
     max-width: 100%;
   }
 
+}/* =====================================================
+   EVENTOS — FORMULARIO MOBILE
+   ===================================================== */
+
+@media (max-width: 768px) {
+
+  .formulario {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .formulario h2 {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .campo {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    margin-bottom: 16px;
+  }
+
+  .campo label {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    margin-bottom: 6px;
+  }
+
+  .campo input,
+  .campo textarea,
+  .campo select {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .campo textarea {
+    resize: vertical;
+  }
+
+  .puestas-tecnicas {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .puesta-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .puesta-header {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .puesta-contenido {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .campo-ancho-completo {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
 }
