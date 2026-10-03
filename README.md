@@ -304,7 +304,7 @@ Actualmente se encuentra en etapa de desarrollo y expansión.
 Proyecto activo:
 
 ```text
-calculadora-horas
+BINIVISION - BiniApp
 ```
 
 El proyecto comenzó originalmente como una calculadora de horas y evolucionó progresivamente hacia Bini App.
