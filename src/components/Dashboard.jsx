@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import CalendarioEventos from "./CalendarioEventos"
+import { cargarEventos } from "../services/eventosService"
 
 function Dashboard({
   abrirCalculadora,
@@ -7,15 +8,34 @@ function Dashboard({
   abrirEvento
 }) {
   const [eventos, setEventos] = useState([])
+  const [errorCarga, setErrorCarga] = useState(false)
 
   useEffect(() => {
-    const eventosGuardados =
-      localStorage.getItem("eventos")
+    let cancelado = false
 
-    if (eventosGuardados) {
-      setEventos(
-        JSON.parse(eventosGuardados)
-      )
+    async function cargar() {
+      try {
+        const lista = await cargarEventos()
+
+        if (!cancelado) {
+          setEventos(lista)
+        }
+      } catch (error) {
+        console.error(
+          "ERROR AL CARGAR EVENTOS:",
+          error
+        )
+
+        if (!cancelado) {
+          setErrorCarga(true)
+        }
+      }
+    }
+
+    cargar()
+
+    return () => {
+      cancelado = true
     }
   }, [])
 
@@ -214,6 +234,12 @@ function Dashboard({
 
       </header>
 
+
+      {errorCarga && (
+        <div className="dashboard-vacio">
+          No se pudieron cargar los eventos.
+        </div>
+      )}
 
       {/* ACTIVIDAD DE HOY */}
 

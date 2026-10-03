@@ -1,5 +1,38 @@
 import { useEffect, useState } from "react"
 
+import {
+  cargarDetalleEvento,
+  actualizarEstadoEvento,
+  guardarBalancePostEvento,
+  crearMaterial,
+  modificarMaterial,
+  borrarMaterial,
+  crearPersona,
+  modificarPersona,
+  borrarPersona
+} from "../services/eventosService"
+
+
+// Convierte el texto del input de cantidad en un entero > 0.
+// Vacío = 1. Devuelve null si el texto no es válido.
+function leerCantidad(texto) {
+
+  const limpio = texto.trim()
+
+  if (limpio === "") {
+    return 1
+  }
+
+  if (!/^\d+$/.test(limpio)) {
+    return null
+  }
+
+  const numero = Number(limpio)
+
+  return numero > 0 ? numero : null
+}
+
+
 function EventoDetalle({
   evento,
   volver,
@@ -19,6 +52,9 @@ function EventoDetalle({
   const [positivosPostEvento, setPositivosPostEvento] =
     useState(evento.positivosPostEvento || "")
 
+  const [guardandoPostEvento, setGuardandoPostEvento] =
+    useState(false)
+
   const [materiales, setMateriales] =
     useState(evento.materiales || [])
 
@@ -35,6 +71,12 @@ function EventoDetalle({
     useState("")
 
   const [rolPersona, setRolPersona] =
+    useState("")
+
+  const [cargandoDetalle, setCargandoDetalle] =
+    useState(true)
+
+  const [errorDatos, setErrorDatos] =
     useState("")
 
 
@@ -67,49 +109,90 @@ function EventoDetalle({
 
 
   // =========================================================
-  // GUARDAR DATOS DEL EVENTO
+  // CARGAR MATERIALES Y PERSONAL DESDE SUPABASE
   // =========================================================
 
-  function guardarDatosEvento(datosActualizados) {
+  useEffect(() => {
 
-    const eventosGuardados =
-      localStorage.getItem("eventos")
+    let cancelado = false
 
-    if (!eventosGuardados) {
-      return
+    async function cargar() {
+
+      setCargandoDetalle(true)
+
+      try {
+
+        const detalle =
+          await cargarDetalleEvento(evento.id)
+
+        if (cancelado) {
+          return
+        }
+
+        setMateriales(detalle.materiales)
+        setPersonal(detalle.personal)
+
+      } catch (error) {
+
+        console.error(
+          "ERROR AL CARGAR EL DETALLE DEL EVENTO:",
+          error
+        )
+
+        if (!cancelado) {
+          setErrorDatos(
+            "No se pudieron cargar los materiales y el personal."
+          )
+        }
+
+      } finally {
+
+        if (!cancelado) {
+          setCargandoDetalle(false)
+        }
+      }
     }
 
-    const eventos =
-      JSON.parse(eventosGuardados)
+    cargar()
 
-    const eventosActualizados =
-      eventos.map((item) =>
-        item.id === evento.id
-          ? {
-              ...item,
-              ...datosActualizados
-            }
-          : item
-      )
+    return () => {
+      cancelado = true
+    }
 
-    localStorage.setItem(
-      "eventos",
-      JSON.stringify(eventosActualizados)
-    )
-  }
+  }, [evento.id])
 
 
   // =========================================================
   // ESTADO
   // =========================================================
 
-  function cambiarEstado(nuevoEstado) {
+  async function cambiarEstado(nuevoEstado) {
 
+    const estadoAnterior = estado
+
+    setErrorDatos("")
     setEstado(nuevoEstado)
 
-    guardarDatosEvento({
-      estado: nuevoEstado
-    })
+    try {
+
+      await actualizarEstadoEvento(
+        evento.id,
+        nuevoEstado
+      )
+
+    } catch (error) {
+
+      console.error(
+        "ERROR AL CAMBIAR EL ESTADO:",
+        error
+      )
+
+      setEstado(estadoAnterior)
+
+      setErrorDatos(
+        "No se pudo cambiar el estado del evento."
+      )
+    }
   }
 
 
@@ -117,72 +200,136 @@ function EventoDetalle({
   // MATERIALES
   // =========================================================
 
-  function agregarMaterial(e) {
+  async function agregarMaterial(e) {
 
     e.preventDefault()
 
-    if (!nombreMaterial.trim()) {
+    setErrorDatos("")
+
+    const nombre = nombreMaterial.trim()
+
+    if (!nombre) {
       return
     }
 
-    const nuevoMaterial = {
-  id: Date.now(),
-  cantidad:
-    cantidadMaterial.trim() || "1",
-  nombre:
-    nombreMaterial.trim(),
-  guardado: false
-}
+    const cantidad =
+      leerCantidad(cantidadMaterial)
 
-    const nuevaLista = [
-      ...materiales,
-      nuevoMaterial
-    ]
+    if (cantidad === null) {
+      setErrorDatos(
+        "La cantidad tiene que ser un número entero mayor a 0."
+      )
+      return
+    }
 
-    setMateriales(nuevaLista)
+    try {
 
-    guardarDatosEvento({
-      materiales: nuevaLista
-    })
+      const nuevoMaterial =
+        await crearMaterial(
+          evento.id,
+          { nombre, cantidad }
+        )
 
-    setCantidadMaterial("")
-    setNombreMaterial("")
+      setMateriales((lista) => [
+        ...lista,
+        nuevoMaterial
+      ])
+
+      setCantidadMaterial("")
+      setNombreMaterial("")
+
+    } catch (error) {
+
+      console.error(
+        "ERROR AL AGREGAR MATERIAL:",
+        error
+      )
+
+      setErrorDatos(
+        "No se pudo agregar el material."
+      )
+    }
   }
 
-function cambiarEstadoMaterial(id) {
 
-  const nuevaLista =
-    materiales.map((material) =>
-      material.id === id
-        ? {
-            ...material,
-            guardado: !material.guardado
-          }
-        : material
-    )
+  async function cambiarEstadoMaterial(id) {
 
-  setMateriales(nuevaLista)
+    const material =
+      materiales.find(
+        (item) => item.id === id
+      )
 
-  guardarDatosEvento({
-    materiales: nuevaLista
-  })
-}
+    if (!material) {
+      return
+    }
+
+    const nuevoValor = !material.guardado
+
+    setErrorDatos("")
+
+    function marcar(valor) {
+      setMateriales((lista) =>
+        lista.map((item) =>
+          item.id === id
+            ? { ...item, guardado: valor }
+            : item
+        )
+      )
+    }
+
+    marcar(nuevoValor)
+
+    try {
+
+      await modificarMaterial(
+        id,
+        { guardado: nuevoValor }
+      )
+
+    } catch (error) {
+
+      console.error(
+        "ERROR AL ACTUALIZAR MATERIAL:",
+        error
+      )
+
+      marcar(!nuevoValor)
+
+      setErrorDatos(
+        "No se pudo actualizar el material."
+      )
+    }
+  }
 
 
-function eliminarMaterial(id) {
+  async function eliminarMaterial(id) {
 
-  const nuevaLista =
-    materiales.filter(
-      (material) =>
-        material.id !== id
-    )
+    setErrorDatos("")
 
-  setMateriales(nuevaLista)
+    try {
 
-  guardarDatosEvento({
-    materiales: nuevaLista
-  })
-}
+      await borrarMaterial(id)
+
+      setMateriales((lista) =>
+        lista.filter(
+          (material) =>
+            material.id !== id
+        )
+      )
+
+    } catch (error) {
+
+      console.error(
+        "ERROR AL ELIMINAR MATERIAL:",
+        error
+      )
+
+      setErrorDatos(
+        "No se pudo eliminar el material."
+      )
+    }
+  }
+
 
   function iniciarEdicionMaterial(material) {
 
@@ -191,7 +338,7 @@ function eliminarMaterial(id) {
     )
 
     setCantidadMaterialEditando(
-      material.cantidad
+      String(material.cantidad)
     )
 
     setNombreMaterialEditando(
@@ -210,35 +357,58 @@ function eliminarMaterial(id) {
   }
 
 
-  function guardarEdicionMaterial(e) {
+  async function guardarEdicionMaterial(e) {
 
     e.preventDefault()
 
-    if (!nombreMaterialEditando.trim()) {
+    setErrorDatos("")
+
+    const nombre =
+      nombreMaterialEditando.trim()
+
+    if (!nombre) {
       return
     }
 
-    const nuevaLista =
-      materiales.map((material) =>
-        material.id === materialEditando
-          ? {
-              ...material,
-              cantidad:
-                cantidadMaterialEditando.trim() ||
-                "1",
-              nombre:
-                nombreMaterialEditando.trim()
-            }
-          : material
+    const cantidad =
+      leerCantidad(cantidadMaterialEditando)
+
+    if (cantidad === null) {
+      setErrorDatos(
+        "La cantidad tiene que ser un número entero mayor a 0."
+      )
+      return
+    }
+
+    try {
+
+      const materialActualizado =
+        await modificarMaterial(
+          materialEditando,
+          { nombre, cantidad }
+        )
+
+      setMateriales((lista) =>
+        lista.map((material) =>
+          material.id === materialEditando
+            ? materialActualizado
+            : material
+        )
       )
 
-    setMateriales(nuevaLista)
+      cancelarEdicionMaterial()
 
-    guardarDatosEvento({
-      materiales: nuevaLista
-    })
+    } catch (error) {
 
-    cancelarEdicionMaterial()
+      console.error(
+        "ERROR AL EDITAR MATERIAL:",
+        error
+      )
+
+      setErrorDatos(
+        "No se pudieron guardar los cambios del material."
+      )
+    }
   }
 
 
@@ -246,51 +416,77 @@ function eliminarMaterial(id) {
   // PERSONAL
   // =========================================================
 
-  function agregarPersona(e) {
+  async function agregarPersona(e) {
 
     e.preventDefault()
 
-    if (!nombrePersona.trim()) {
+    setErrorDatos("")
+
+    const nombre = nombrePersona.trim()
+
+    if (!nombre) {
       return
     }
 
-    const nuevaPersona = {
-      id: Date.now(),
-      nombre:
-        nombrePersona.trim(),
-      rol:
-        rolPersona.trim()
+    try {
+
+      const nuevaPersona =
+        await crearPersona(
+          evento.id,
+          {
+            nombre,
+            rol: rolPersona.trim()
+          }
+        )
+
+      setPersonal((lista) => [
+        ...lista,
+        nuevaPersona
+      ])
+
+      setNombrePersona("")
+      setRolPersona("")
+
+    } catch (error) {
+
+      console.error(
+        "ERROR AL AGREGAR PERSONAL:",
+        error
+      )
+
+      setErrorDatos(
+        "No se pudo agregar a la persona."
+      )
     }
-
-    const nuevaLista = [
-      ...personal,
-      nuevaPersona
-    ]
-
-    setPersonal(nuevaLista)
-
-    guardarDatosEvento({
-      personal: nuevaLista
-    })
-
-    setNombrePersona("")
-    setRolPersona("")
   }
 
 
-  function eliminarPersona(id) {
+  async function eliminarPersona(id) {
 
-    const nuevaLista =
-      personal.filter(
-        (persona) =>
-          persona.id !== id
+    setErrorDatos("")
+
+    try {
+
+      await borrarPersona(id)
+
+      setPersonal((lista) =>
+        lista.filter(
+          (persona) =>
+            persona.id !== id
+        )
       )
 
-    setPersonal(nuevaLista)
+    } catch (error) {
 
-    guardarDatosEvento({
-      personal: nuevaLista
-    })
+      console.error(
+        "ERROR AL ELIMINAR PERSONAL:",
+        error
+      )
+
+      setErrorDatos(
+        "No se pudo eliminar a la persona."
+      )
+    }
   }
 
 
@@ -320,34 +516,51 @@ function eliminarMaterial(id) {
   }
 
 
-  function guardarEdicionPersona(e) {
+  async function guardarEdicionPersona(e) {
 
     e.preventDefault()
 
-    if (!nombrePersonaEditando.trim()) {
+    setErrorDatos("")
+
+    const nombre =
+      nombrePersonaEditando.trim()
+
+    if (!nombre) {
       return
     }
 
-    const nuevaLista =
-      personal.map((persona) =>
-        persona.id === personaEditando
-          ? {
-              ...persona,
-              nombre:
-                nombrePersonaEditando.trim(),
-              rol:
-                rolPersonaEditando.trim()
-            }
-          : persona
+    try {
+
+      const personaActualizada =
+        await modificarPersona(
+          personaEditando,
+          {
+            nombre,
+            rol: rolPersonaEditando.trim()
+          }
+        )
+
+      setPersonal((lista) =>
+        lista.map((persona) =>
+          persona.id === personaEditando
+            ? personaActualizada
+            : persona
+        )
       )
 
-    setPersonal(nuevaLista)
+      cancelarEdicionPersona()
 
-    guardarDatosEvento({
-      personal: nuevaLista
-    })
+    } catch (error) {
 
-    cancelarEdicionPersona()
+      console.error(
+        "ERROR AL EDITAR PERSONAL:",
+        error
+      )
+
+      setErrorDatos(
+        "No se pudieron guardar los cambios de la persona."
+      )
+    }
   }
 
 
@@ -355,12 +568,36 @@ function eliminarMaterial(id) {
   // POST EVENTO
   // =========================================================
 
-  function guardarPostEvento() {
+  async function guardarPostEvento() {
 
-    guardarDatosEvento({
-      problemasPostEvento,
-      positivosPostEvento
-    })
+    setErrorDatos("")
+    setGuardandoPostEvento(true)
+
+    try {
+
+      await guardarBalancePostEvento(
+        evento.id,
+        {
+          problemas: problemasPostEvento,
+          positivos: positivosPostEvento
+        }
+      )
+
+    } catch (error) {
+
+      console.error(
+        "ERROR AL GUARDAR EL BALANCE:",
+        error
+      )
+
+      setErrorDatos(
+        "No se pudo guardar el balance del evento."
+      )
+
+    } finally {
+
+      setGuardandoPostEvento(false)
+    }
   }
 
 
@@ -400,6 +637,16 @@ function eliminarMaterial(id) {
   // =========================================================
 
   function obtenerEstadoSeccion(seccion) {
+
+    if (
+      cargandoDetalle &&
+      (seccion === "materiales" || seccion === "personal")
+    ) {
+      return {
+        completa: false,
+        texto: "Cargando..."
+      }
+    }
 
     if (seccion === "pantalla") {
 
@@ -631,6 +878,13 @@ function eliminarMaterial(id) {
   return (
 
     <div className="app detalle-app">
+
+      {errorDatos && (
+        <p className="error">
+          {errorDatos}
+        </p>
+      )}
+
 
 
       {/* HEADER */}
@@ -2101,8 +2355,11 @@ function eliminarMaterial(id) {
           <button
             className="detalle-guardar-postevento"
             onClick={guardarPostEvento}
+            disabled={guardandoPostEvento}
           >
-            Guardar balance
+            {guardandoPostEvento
+              ? "Guardando..."
+              : "Guardar balance"}
           </button>
 
         </section>

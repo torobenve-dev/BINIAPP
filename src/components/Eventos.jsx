@@ -1,5 +1,9 @@
 import { useEffect, useState } from "react"
 import { supabase } from "../supabaseClient"
+import {
+  cargarEventos as cargarEventosDeSupabase,
+  mapearEvento
+} from "../services/eventosService"
 import CalendarioEventos from "./CalendarioEventos"
 
 function Eventos({
@@ -140,15 +144,10 @@ function Eventos({
   // =========================
 
   useEffect(() => {
-    async function cargarEventos() {
-      const { data, error } = await supabase
-        .from("eventos")
-        .select("*")
-        .order("fecha_inicio", {
-          ascending: true
-        })
-
-      if (error) {
+    async function cargar() {
+      try {
+        setEventos(await cargarEventosDeSupabase())
+      } catch (error) {
         console.error(
           "ERROR AL CARGAR EVENTOS:",
           error
@@ -157,53 +156,10 @@ function Eventos({
         setError(
           "No se pudieron cargar los eventos."
         )
-
-        return
       }
-
-      const eventosConvertidos =
-        data.map((evento) => ({
-          id: evento.id,
-
-          nombre: evento.nombre,
-
-          fechaInicio:
-            evento.fecha_inicio,
-
-          fechaFin:
-            evento.fecha_fin,
-
-          fechaArmado:
-            evento.fecha_armado,
-
-          horaArmado:
-            evento.hora_armado,
-
-          fechaDesarme:
-            evento.fecha_desarme,
-
-          horaDesarme:
-            evento.hora_desarme,
-
-          lugar: evento.lugar,
-
-          contacto: evento.contacto,
-
-          estado: evento.estado,
-
-          ...evento.datos
-        }))
-
-      setEventos(eventosConvertidos)
-
-      // Copia local temporal
-      localStorage.setItem(
-        "eventos",
-        JSON.stringify(eventosConvertidos)
-      )
     }
 
-    cargarEventos()
+    cargar()
   }, [])
 
   // =========================
@@ -379,35 +335,11 @@ function Eventos({
       }
 
       const eventoActualizado = {
-        id: data.id,
-
-        nombre: data.nombre,
-
-        fechaInicio:
-          data.fecha_inicio,
-
-        fechaFin:
-          data.fecha_fin,
-
-        fechaArmado:
-          data.fecha_armado,
-
-        horaArmado:
-          data.hora_armado,
-
-        fechaDesarme:
-          data.fecha_desarme,
-
-        horaDesarme:
-          data.hora_desarme,
-
-        lugar: data.lugar,
-
-        contacto: data.contacto,
-
-        estado: data.estado,
-
-        ...data.datos
+        ...eventos.find(
+          (evento) =>
+            evento.id === eventoEditando
+        ),
+        ...mapearEvento(data)
       }
 
       const eventosActualizados =
@@ -419,10 +351,6 @@ function Eventos({
 
       setEventos(eventosActualizados)
 
-      localStorage.setItem(
-        "eventos",
-        JSON.stringify(eventosActualizados)
-      )
 
       limpiarFormulario()
 
@@ -476,35 +404,9 @@ function Eventos({
     }
 
     const nuevoEvento = {
-      id: data.id,
-
-      nombre: data.nombre,
-
-      fechaInicio:
-        data.fecha_inicio,
-
-      fechaFin:
-        data.fecha_fin,
-
-      fechaArmado:
-        data.fecha_armado,
-
-      horaArmado:
-        data.hora_armado,
-
-      fechaDesarme:
-        data.fecha_desarme,
-
-      horaDesarme:
-        data.hora_desarme,
-
-      lugar: data.lugar,
-
-      contacto: data.contacto,
-
-      estado: data.estado,
-
-      ...data.datos
+      ...mapearEvento(data),
+      materiales: [],
+      personal: []
     }
 
     const eventosActualizados = [
@@ -514,10 +416,6 @@ function Eventos({
 
     setEventos(eventosActualizados)
 
-    localStorage.setItem(
-      "eventos",
-      JSON.stringify(eventosActualizados)
-    )
 
     limpiarFormulario()
 
@@ -745,10 +643,6 @@ function Eventos({
 
     setEventos(eventosActualizados)
 
-    localStorage.setItem(
-      "eventos",
-      JSON.stringify(eventosActualizados)
-    )
 
     if (eventoEditando === id) {
       limpiarFormulario()

@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient"
+import { cargarEventos } from "./services/eventosService"
 import { useEffect, useState } from "react"
 import "./App.css"
 
@@ -14,20 +14,6 @@ import SidebarUsuario from "./SidebarUsuario"
 
 function App() {
 
-  useEffect(() => {
-  async function probarSupabase() {
-    const { data, error } = await supabase
-      .from("eventos")
-      .select("*")
-      .limit(1)
-
-    console.log("SUPABASE DATA:", data)
-    console.log("SUPABASE ERROR:", error)
-  }
-
-  probarSupabase()
-}, [])
- 
   const [pantalla, setPantalla] =
     useState("dashboard")
 
@@ -50,13 +36,27 @@ function App() {
 
   useEffect(() => {
 
-    const eventosGuardados =
-      localStorage.getItem("eventos")
+    let cancelado = false
 
-    if (eventosGuardados) {
-      setEventos(
-        JSON.parse(eventosGuardados)
-      )
+    async function cargar() {
+      try {
+        const lista = await cargarEventos()
+
+        if (!cancelado) {
+          setEventos(lista)
+        }
+      } catch (error) {
+        console.error(
+          "ERROR AL CARGAR EVENTOS:",
+          error
+        )
+      }
+    }
+
+    cargar()
+
+    return () => {
+      cancelado = true
     }
 
   }, [pantalla])
