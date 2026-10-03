@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { supabase } from "../supabaseClient"
+import { useAuth } from "../auth/AuthContext"
 import {
   cargarEventos as cargarEventosDeSupabase,
   mapearEvento
@@ -13,6 +14,8 @@ function Eventos({
   terminarEdicion,
   eventoGuardado
 }) {
+
+  const { esEditor } = useAuth()
   const [eventos, setEventos] = useState([])
 
   // =========================
@@ -719,6 +722,7 @@ function Eventos({
 
       </div>
 
+      {esEditor && (
       <div className="formulario">
 
         {eventoEditando && (
@@ -1501,6 +1505,7 @@ function Eventos({
         )}
 
       </div>
+      )}
 
       {/* =========================
           CALENDARIO
@@ -1638,7 +1643,8 @@ function Eventos({
 
             <div className="botones-jornada">
 
-              <button
+              {esEditor && (
+<button
                 className="boton-editar"
                 onClick={() =>
                   editarEvento(evento)
@@ -1646,8 +1652,10 @@ function Eventos({
               >
                 Editar
               </button>
+)}
 
-              <button
+              {esEditor && (
+<button
                 className="boton-eliminar"
                 onClick={() =>
                   eliminarEvento(
@@ -1657,6 +1665,7 @@ function Eventos({
               >
                 Eliminar
               </button>
+)}
 
               <button
                 className="boton-principal"

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react"
 
+import { useAuth } from "../auth/AuthContext"
+
 import {
   cargarDetalleEvento,
   actualizarEstadoEvento,
@@ -39,6 +41,8 @@ function EventoDetalle({
   editarEvento,
   seccionInicial = "seccion-resumen"
 }) {
+
+  const { esEditor } = useAuth()
 
   const [estado, setEstado] =
     useState(evento.estado || "Confirmado")
@@ -932,7 +936,8 @@ function EventoDetalle({
               {estado}
             </span>
 
-            <button
+            {esEditor && (
+<button
               className="detalle-editar"
               onClick={() =>
                 editarEvento(evento)
@@ -940,6 +945,7 @@ function EventoDetalle({
             >
               Editar evento
             </button>
+)}
 
           </div>
 
@@ -1022,6 +1028,7 @@ function EventoDetalle({
 
           <select
             value={estado}
+            disabled={!esEditor}
             onChange={(e) =>
               cambiarEstado(
                 e.target.value
@@ -1782,7 +1789,8 @@ function EventoDetalle({
           </div>
 
 
-          <form
+          {esEditor && (
+<form
             className="detalle-form-material"
             onSubmit={agregarMaterial}
           >
@@ -1814,6 +1822,7 @@ function EventoDetalle({
             </button>
 
           </form>
+)}
 
 <div className="detalle-materiales-progreso">
 
@@ -1918,10 +1927,12 @@ function EventoDetalle({
 
   <label
   className="detalle-material-check"
-  onClick={() => {
-    console.log("CLICK MATERIAL:", material.id)
-    cambiarEstadoMaterial(material.id)
-  }}
+  onClick={
+    esEditor
+      ? () => cambiarEstadoMaterial(material.id)
+      : undefined
+  }
+  style={esEditor ? undefined : { cursor: "default" }}
 >
 <span
   className={`detalle-checkbox-visual ${
@@ -1952,7 +1963,8 @@ function EventoDetalle({
 
 </div>
 
-                        <div className="detalle-lista-acciones">
+                        {esEditor && (
+<div className="detalle-lista-acciones">
 
                           <button
                             type="button"
@@ -1980,6 +1992,7 @@ function EventoDetalle({
                           </button>
 
                         </div>
+)}
 
                       </>
 
@@ -2038,7 +2051,8 @@ function EventoDetalle({
           </div>
 
 
-          <form
+          {esEditor && (
+<form
             className="detalle-form-personal"
             onSubmit={agregarPersona}
           >
@@ -2070,6 +2084,7 @@ function EventoDetalle({
             </button>
 
           </form>
+)}
 
 
           <div className="detalle-lista">
@@ -2169,7 +2184,8 @@ function EventoDetalle({
                         </div>
 
 
-                        <div className="detalle-lista-acciones">
+                        {esEditor && (
+<div className="detalle-lista-acciones">
 
                           <button
                             type="button"
@@ -2197,6 +2213,7 @@ function EventoDetalle({
                           </button>
 
                         </div>
+)}
 
                       </>
 
@@ -2319,6 +2336,7 @@ function EventoDetalle({
               </label>
 
               <textarea
+                readOnly={!esEditor}
                 value={problemasPostEvento}
                 onChange={(e) =>
                   setProblemasPostEvento(
@@ -2338,6 +2356,7 @@ function EventoDetalle({
               </label>
 
               <textarea
+                readOnly={!esEditor}
                 value={positivosPostEvento}
                 onChange={(e) =>
                   setPositivosPostEvento(
@@ -2352,7 +2371,8 @@ function EventoDetalle({
           </div>
 
 
-          <button
+          {esEditor && (
+<button
             className="detalle-guardar-postevento"
             onClick={guardarPostEvento}
             disabled={guardandoPostEvento}
@@ -2361,6 +2381,7 @@ function EventoDetalle({
               ? "Guardando..."
               : "Guardar balance"}
           </button>
+)}
 
         </section>
 

@@ -1,4 +1,5 @@
 import { cargarEventos } from "./services/eventosService"
+import { useAuth } from "./auth/AuthContext"
 import { useEffect, useState } from "react"
 import "./App.css"
 
@@ -7,12 +8,19 @@ import CalculadoraHoras from "./components/CalculadoraHoras"
 import Eventos from "./components/Eventos"
 import EventoDetalle from "./components/EventoDetalle"
 import CalendarioEventos from "./components/CalendarioEventos"
+import Login from "./components/Login"
+import NuevaClave from "./components/NuevaClave"
 
 import Sidebar from "./Sidebar"
 import SidebarUsuario from "./SidebarUsuario"
 
 
 function App() {
+
+  const { sesion, cargando, recuperandoClave } =
+    useAuth()
+
+  const usuarioId = sesion?.user?.id
 
   const [pantalla, setPantalla] =
     useState("dashboard")
@@ -35,6 +43,10 @@ function App() {
 
 
   useEffect(() => {
+
+    if (!usuarioId) {
+      return
+    }
 
     let cancelado = false
 
@@ -59,7 +71,20 @@ function App() {
       cancelado = true
     }
 
-  }, [pantalla])
+  }, [pantalla, usuarioId])
+
+
+  // Al cerrar sesión se limpia todo lo que había en pantalla.
+  useEffect(() => {
+
+    if (!sesion) {
+      setPantalla("dashboard")
+      setEventoSeleccionado(null)
+      setEventoParaEditar(null)
+      setEventos([])
+    }
+
+  }, [sesion])
 
 
   function abrirDetalleEvento(
@@ -72,6 +97,25 @@ function App() {
     setSeccionEventoInicial(seccion)
 
     setPantalla("detalle-evento")
+  }
+
+
+  if (cargando) {
+    return (
+      <div className="auth-pantalla">
+        <p className="auth-cargando">
+          Cargando...
+        </p>
+      </div>
+    )
+  }
+
+  if (recuperandoClave) {
+    return <NuevaClave />
+  }
+
+  if (!sesion) {
+    return <Login />
   }
 
 

@@ -1,0 +1,130 @@
+/* Pantallas de acceso: inicio de sesión y nueva contraseña */
+
+.auth-pantalla {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+  background: var(--bini-bg, #111111);
+}
+
+.auth-tarjeta {
+  width: 100%;
+  max-width: 380px;
+  box-sizing: border-box;
+  padding: 32px 28px;
+  text-align: left;
+  color: var(--bini-text, #dddddd);
+  background: var(--bini-panel, #181818);
+  border: 1px solid var(--bini-border, #2c2c2c);
+  border-radius: 12px;
+}
+
+.auth-logo {
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  color: var(--bini-turquesa, #19d3c5);
+}
+
+.auth-subtitulo {
+  margin: 4px 0 24px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.25em;
+  color: var(--bini-muted, #888888);
+}
+
+.auth-titulo {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--bini-white, #ffffff);
+}
+
+.auth-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.auth-campo label {
+  font-size: 13px;
+  color: var(--bini-muted, #888888);
+}
+
+.auth-campo input {
+  padding: 11px 12px;
+  font-size: 15px;
+  color: var(--bini-white, #ffffff);
+  background: var(--bini-bg, #111111);
+  border: 1px solid var(--bini-border-light, #383838);
+  border-radius: 8px;
+  outline: none;
+}
+
+.auth-campo input:focus {
+  border-color: var(--bini-turquesa, #19d3c5);
+}
+
+.auth-boton {
+  width: 100%;
+  margin-top: 6px;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #0b1f1e;
+  background: var(--bini-turquesa, #19d3c5);
+  border: none;
+  border-radius: 8px;
+}
+
+.auth-boton:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.auth-enlace {
+  display: block;
+  margin: 16px auto 0;
+  padding: 0;
+  font-size: 13px;
+  cursor: pointer;
+  color: var(--bini-muted, #888888);
+  background: none;
+  border: none;
+  text-decoration: underline;
+}
+
+.auth-enlace:hover {
+  color: var(--bini-turquesa, #19d3c5);
+}
+
+.auth-error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--bini-rojo, #e06b6b);
+  background: rgba(224, 107, 107, 0.08);
+  border: 1px solid rgba(224, 107, 107, 0.3);
+  border-radius: 8px;
+}
+
+.auth-aviso {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--bini-turquesa, #19d3c5);
+  background: var(--bini-turquesa-suave, rgba(25, 211, 197, 0.08));
+  border: 1px solid rgba(25, 211, 197, 0.3);
+  border-radius: 8px;
+}
+
+.auth-cargando {
+  color: var(--bini-muted, #888888);
+}
